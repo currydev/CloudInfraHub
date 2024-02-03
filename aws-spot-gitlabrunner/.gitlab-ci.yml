@@ -1,0 +1,107 @@
+stages:
+  - validate
+  - test
+  - build
+  - deploy
+  - plan
+  - apply
+  - cleanup
+#variables:
+#  TF_ROOT: ${CI_PROJECT_DIR}/terraform
+# TF_STATE: test
+#  TF_ADDRESS: "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE}"
+#  TF_USERNAME: ${TF_USERNAME}
+#  TF_PASSWORD: ${TF_PASSWORD}
+#  TF_VAR_stage: dev
+
+
+cache:
+  key: $CI_PIPELINE_ID
+  paths:
+    - ${TF_ROOT}/.terraform
+
+validate:
+  needs: [ ]
+  stage: validate
+  image:
+    name: hashicorp/terraform:1.4
+    entrypoint: [""]
+  script:
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - terraform init
+    - terraform validate
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+plan:
+  stage: plan
+  image:
+    name: hashicorp/terraform:1.4
+    entrypoint: [""]
+  variables:
+    TF_HTTP_ADDRESS: "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/terraform/state/default"
+    TF_HTTP_USERNAME: ${TF_USERNAME}
+    TF_HTTP_PASSWORD: ${TF_PASSWORD}
+  script:
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - terraform init
+    - terraform plan -out=tfplan
+    - terraform show -json tfplan > tfplan.json
+    - terraform show -no-color tfplan
+  artifacts:
+    paths:
+      - tfplan.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - changes:
+        - '*.tf'
+        - '*.tfvars'
+        - '*.yaml'
+        - '*.yml'
+apply:
+  stage: apply
+  image:
+    name: hashicorp/terraform:1.4
+    entrypoint: [""]
+  variables:
+    TF_HTTP_ADDRESS: "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/terraform/state/default"
+    TF_HTTP_USERNAME: ${TF_USERNAME}
+    TF_HTTP_PASSWORD: ${TF_PASSWORD}
+  script:
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - terraform init
+    - terraform apply -auto-approve
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - changes:
+        - '*.tf'
+        - '*.tfvars'
+        - '*.yaml'
+        - '*.yml'
+    - when: never
+cleanup:
+  stage: cleanup
+  image:
+    name: hashicorp/terraform:1.4
+    entrypoint: [""]
+  variables:
+    TF_HTTP_ADDRESS: "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/terraform/state/default"
+    TF_HTTP_USERNAME: ${TF_USERNAME}
+    TF_HTTP_PASSWORD: ${TF_PASSWORD}
+  script:
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - terraform init
+    - terraform destroy -auto-approve
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - changes:
+        - '*.tf'
+        - '*.tfvars'
+        - '*.yaml'
+        - '*.yml'
+    - when: never

@@ -59,4 +59,3 @@ While this repository primarily caters to our internal use, we appreciate contri
 By maintaining a curated repository of IaC templates, we're committed to enhancing the efficiency of our internal consulting and private projects. Leverage these templates to reduce setup time, ensure consistency, and focus on delivering value to our clients and stakeholders.
 
 We invite you to explore, adapt, and collaborate with us as we continue to simplify and optimize our cloud infrastructure deployment processes.
-
