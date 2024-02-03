@@ -1,0 +1,29 @@
+services:
+  user:
+    container_name: bio-linux-container-user
+    build: 
+      context: .
+      args:
+        - root_password=$root_password
+        - user_name=$user_name
+        - user_password=$user_password
+        - host_name=$host_name
+    hostname: $host_name
+    shm_size: $shm_size
+    tty: true
+    ports: 
+      - $RDPport:3389 #RDP
+      - $SSHport:22 #SSH
+      - 9091:3389
+    environment:
+      USERID: 1000
+      GROUPID: 1001
+      CHOWN_HOME: "yes"
+      CHOWN_HOME_OPTS: "-R"
+
+    volumes:
+      - /home/user/rdp-linux:/home/$user_name/Workdir/:rw
+      - /mnt:/mnt
+    command:
+      bash -c '/usr/bin/supervisord -c /etc/supervisor/supervisord.conf'
+    restart: always

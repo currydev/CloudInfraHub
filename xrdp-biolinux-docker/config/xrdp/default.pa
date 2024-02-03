@@ -1,0 +1,6 @@
+#!/usr/bin/pulseaudio -nF
+load-module module-native-protocol-unix
+load-module module-dbus-protocol
+load-module module-x11-publish
+load-module module-x11-xsmp
+load-module module-cli-protocol-unix
